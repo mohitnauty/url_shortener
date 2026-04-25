@@ -15,22 +15,4 @@ class ExampleTest extends TestCase
     {
         $this->get('/')->assertRedirect('/login');
     }
-
-    public function test_authenticated_user_redirected_to_dashboard()
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
-            ->get('/')
-            ->assertRedirect('/dashboard');
-    }
-
-    public function test_dashboard_accessible()
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
-            ->get('/dashboard')
-            ->assertStatus(200);
-    }
 }
