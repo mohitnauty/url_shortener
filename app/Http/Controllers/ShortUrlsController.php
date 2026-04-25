@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\ShortUrls;
+use App\Services\ShortUrlsService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ShortUrlsController extends Controller
@@ -14,44 +17,55 @@ class ShortUrlsController extends Controller
         return view('short-urls.index');
     }
 
-    public function generate(Request $request)
+    public function generate(Request $request, ShortUrlsService $service)
     {
         if ($request->isMethod('get')) {
             return view('short-urls.generate');
         }
 
         $request->validate([
-            'original_url'  => 'required|string'
+            'original_url' => 'required|url'
         ]);
 
-        $shortUrl = ShortUrls::create([
-            'original_url'  => $request->original_url,
-            'user_id'       => auth()->user()->id,
-            'company_id'    => auth()->user()->company_id,
-            'hits'          => 0
-        ]);
+        $user = auth()->user();
 
-        $shortUrl->short_code = str_pad(
-            ShortUrls::base62($shortUrl->id),
-            5,
-            'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
-            STR_PAD_LEFT
-        );
-        
-        if(!$shortUrl->checkUrl($shortUrl->short_code)) {
-            //Generate again
-            $shortUrl->save();
+        try {
+            $shortUrl = DB::transaction(function () use ($request, $service, $user) {
+
+                $record = ShortUrls::create([
+                    'original_url' => $request->original_url,
+                    'user_id'      => $user->id,
+                    'company_id'   => $user->company_id,
+                ]);
+
+                $code = $service->encode($record->id);
+
+                $record->update([
+                    'short_code' => $code
+                ]);
+
+                return $record;
+            });
+
+        } catch (\Exception $e) {
+            Log::error('Short URL generation failed: ' . $e->getMessage());
+            return back()->with('error', 'Something went wrong. Please try again.');
         }
 
         return redirect()
             ->route('dashboard')
-            ->with('success', 'Url generated successfully');
+            ->with('success', 'URL generated successfully');
     }
 
     public function redirect($code)
     {
-        $shortUrl = ShortUrls::where('short_code', $code)->firstOrFail();
-        $shortUrl->increment('hits');
+        $shortUrl = cache()->remember("short_url:$code", 3600, function () use ($code) {
+            return ShortUrls::where('short_code', $code)->firstOrFail();
+        });
+
+        dispatch(function () use ($shortUrl) {
+            $shortUrl->increment('hits');
+        });
 
         return redirect()->away($shortUrl->original_url);
     }
