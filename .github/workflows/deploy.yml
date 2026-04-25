@@ -9,9 +9,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
     - name: Deploy to EC2 via SSH
       uses: appleboy/ssh-action@v0.1.10
       with:
@@ -20,14 +17,15 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
           cd /var/www/url_shortener
-        
+
           git pull origin main
-        
+
           composer install --no-dev --optimize-autoloader
-        
+
           php artisan migrate --force
-        
-          chown -R www-data:www-data storage bootstrap/cache
+
           chmod -R 775 storage bootstrap/cache
-        
+
+          php artisan config:clear
+          php artisan cache:clear
           php artisan config:cache
