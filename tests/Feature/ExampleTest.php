@@ -11,12 +11,26 @@ class ExampleTest extends TestCase
     /**
      * A basic test example.
      */
-    public function test_homepage()
+    public function test_guest_redirected_to_login()
+    {
+        $this->get('/')->assertRedirect('/login');
+    }
+
+    public function test_authenticated_user_redirected_to_dashboard()
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->get('/');
+        $this->actingAs($user)
+            ->get('/')
+            ->assertRedirect('/dashboard');
+    }
 
-        $response->assertStatus(200);
+    public function test_dashboard_accessible()
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get('/dashboard')
+            ->assertStatus(200);
     }
 }
