@@ -6,9 +6,9 @@
 
 #Open your terminal in your System and run this command showing below
 
-**git clone https://github.com/mohitnauty/url-shortener.git**
+**git clone https://github.com/mohitnauty/url_shortener.git**
 
-**cd url-shortener/**
+**cd url_shortener/**
 
 #After check php and composer is installed in your system using
 
@@ -24,7 +24,7 @@
 
 **2. Add DB name, user, password in .env file for DB_DATABASE, DB_USERNAME, DB_PASSWORD**
 
-#Run commands in your project directory(url-shortener)
+#Run commands in your project directory(url_shortener)
 
 **3. composer install** #Wait for this it takes little bit time
 
@@ -51,7 +51,7 @@
 **Email : superadmin@test.com**
 **Password : password**
 
-#OR you can get it from directory - /url-shortener/database/seeders/DatabaseSeeder.php
+#OR you can get it from directory - /url_shortener/database/seeders/DatabaseSeeder.php
 
 ***Note:** Default password for new user : "123456"*
 
@@ -72,7 +72,3 @@
 #- Member can only see the list of all short urls created by themselves
 
 #- Short urls are publicly resolvable and redirect to the original url
-
-*If any challenge faced while setup and testing feel free to connect over email*
-
-**Thank You**
