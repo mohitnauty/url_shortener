@@ -22,6 +22,5 @@ class ShortUrlsService
         }
 
         return $str;
-        //return str_pad($str, 7, '0', STR_PAD_LEFT);
     }
 }
