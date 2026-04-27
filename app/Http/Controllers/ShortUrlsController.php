@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\ShortUrls;
-use App\Services\ShortUrlsService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +16,7 @@ class ShortUrlsController extends Controller
         return view('short-urls.index');
     }
 
-    public function generate(Request $request, ShortUrlsService $service)
+    public function generate(Request $request)
     {
         if ($request->isMethod('get')) {
             return view('short-urls.generate');
@@ -30,7 +29,7 @@ class ShortUrlsController extends Controller
         $user = auth()->user();
 
         try {
-            $shortUrl = DB::transaction(function () use ($request, $service, $user) {
+            $shortUrl = DB::transaction(function () use ($request, $user) {
 
                 $record = ShortUrls::create([
                     'original_url' => $request->original_url,
@@ -38,7 +37,7 @@ class ShortUrlsController extends Controller
                     'company_id'   => $user->company_id,
                 ]);
 
-                $code = $service->encode($record->id);
+                $code = ShortUrls::base62($record->id);
 
                 $record->update([
                     'short_code' => $code
@@ -49,7 +48,7 @@ class ShortUrlsController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Short URL generation failed: ' . $e->getMessage());
-            return back()->with('error', 'Something went wrong. Please try again.');
+            return back()->with('error', 'Something went wrong or Short code got duplicate, please try again.');
         }
 
         return redirect()
